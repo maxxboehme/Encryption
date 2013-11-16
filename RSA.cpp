@@ -2,7 +2,7 @@
  * RSA.cpp
  *
  *  Created on: Nov 7, 2013
- *      Author: Maxx
+ *      Author: Maxx Boehme
  */
 #include <iostream>
 #include <fstream>
@@ -25,25 +25,16 @@ string byteToBinary(byte);
 string byteAC(byte *, int);
 string byteAS(byte *, int);
 
-int main(int argc, char* args[]){
-	//	clock_t t;
-	//	clock_t avg = 0;
-	//	int NUM_OF_TIMES = 20;
-	//	for(int i = 0; i < NUM_OF_TIMES; i++){
-	//		t = clock();
-	//		encryption("inputFile3.txt", "key3", "encryptedFile.txt");
-	//		decryption("encryptedFile.txt", "key3", "decryptedfile.txt");
-	//		t = clock() - t;
-	//		avg += t;
-	//	}
-	//	avg = avg / NUM_OF_TIMES;
-	//	printf ("It took me %d clicks on average (%f seconds).\n",avg,((float)avg)/CLOCKS_PER_SEC);
-
+int main(int argc, char *args[]){
 	if(argc == 5){
-		if(strcmp(args[1], "encrypt")){
+		if(!strcmp(args[1], "e")){
+			cout << "encrypting" << endl;
 			encryption(args[2], args[3], args[4]);
-		}else if(strcmp(args[1], "decrypt")){
+		}else if(!strcmp(args[1], "d")){
+			cout << "decrypting" << endl;
 			decryption(args[2], args[3], args[4]);
+		} else {
+			cerr << "Do not know command entered: " << args[1] << endl;
 		}
 	} else {
 		cerr << "Did not enter correct number of argumensts: 5"<< endl;
