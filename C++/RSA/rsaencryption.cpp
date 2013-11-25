@@ -19,19 +19,23 @@ typedef char byte;
 
 ULong findHighestSetBit(ULong);
 unsigned int fastModularExp(ULong, ULong, ULong);
-byte* intToByteArray(int);
+byte* intToByteArray(int, byte *);
 string intToBinary(int);
 string byteToBinary(byte);
 string byteAC(byte *, int);
 string byteAS(byte *, int);
 
-void encryption(string nameInputFile, string nameKeyFile, string nameOutputFile) {
+int encryption(string nameInputFile, string nameKeyFile, string nameOutputFile) {
 	ifstream keyStream;
 	keyStream.open(nameKeyFile.c_str());
 	ULong keys[3];
 	int keyIndex = 0;
-	while(keyStream.good() && keyIndex < 3){
-		keyStream >> keys[keyIndex++];
+	if(keyStream){
+		while(keyStream.good() && keyIndex < 3){
+			keyStream >> keys[keyIndex++];
+		}
+	} else {
+		return 1;
 	}
 	keyStream.close();
 
@@ -48,11 +52,12 @@ void encryption(string nameInputFile, string nameKeyFile, string nameOutputFile)
 	//	ostream.rdbuf()->pubsetbuf(bigbufferW, BUFF_SIZE);
 	ostream.open(nameOutputFile.c_str(), ios::binary);
 
-	int message = 0;
+	unsigned int message = 0;
 	byte bytes[3];
 
 	//checks to make sure there are still bytes left to read
 	int length = 0;
+	byte *messageArray = new byte[4];
 	while(istream.good()) {
 		istream.read(bytes, 3);
 		length = istream.gcount();
@@ -64,23 +69,31 @@ void encryption(string nameInputFile, string nameKeyFile, string nameOutputFile)
 			}
 			//encrypts the message using fast modular exponentiation
 			message = fastModularExp(message, keys[1], keys[0]);
+
+			intToByteArray(message, messageArray);
 			//writes all 4 bytes to the output file
-			ostream.write(intToByteArray(message), 4);
+			ostream.write(messageArray, 4);
 		}
 	}
+	delete[] messageArray;
 	//	delete[] bigbufferR;
 	//	delete[] bigbufferW;
 	ostream.close();
 	istream.close();
+	return 0;
 }
 
-void decryption(string nameInputFile, string nameKeyFile, string nameOutputFile) {
+int decryption(string nameInputFile, string nameKeyFile, string nameOutputFile) {
 	ifstream keyStream;
 	keyStream.open(nameKeyFile.c_str());
 	ULong keys[3];
 	int keyIndex = 0;
-	while(keyStream.good() && keyIndex < 3){
-		keyStream >> keys[keyIndex++];
+	if(keyStream){
+		while(keyStream.good() && keyIndex < 3){
+			keyStream >> keys[keyIndex++];
+		}
+	} else {
+		return 1;
 	}
 	keyStream.close();
 
@@ -96,11 +109,12 @@ void decryption(string nameInputFile, string nameKeyFile, string nameOutputFile)
 	//	ostream.rdbuf()->pubsetbuf(bigbufferW, BUFF_SIZE);
 	ostream.open(nameOutputFile.c_str(), ios::binary);
 
-	int message = 0;
+	unsigned int message = 0;
 	byte bytes[4];
 
 	istream.read(bytes, 4);
 	int length = istream.gcount();
+	byte *messageArray = new byte[4];
 	while(length > 0) {
 		message = 0;
 		//concatenates 3 bytes together in message
@@ -112,7 +126,7 @@ void decryption(string nameInputFile, string nameKeyFile, string nameOutputFile)
 		message = fastModularExp(message, keys[2], keys[0]);
 
 		//writes all 4 bytes to the output file
-		byte *messageArray = intToByteArray(message);
+		intToByteArray(message, messageArray);
 
 		istream.read(bytes, 4);
 		length = istream.gcount();
@@ -130,24 +144,29 @@ void decryption(string nameInputFile, string nameKeyFile, string nameOutputFile)
 			ostream.write(&messageArray[2], 1);
 			ostream.write(&messageArray[3], 1);
 		}
-		delete[] messageArray;
 	}
+	delete[] messageArray;
 	//	delete[] bigbufferR;
 	//	delete[] bigbufferW;
 	ostream.close();
 	istream.close();
+	return 0;
 }
 
 unsigned int fastModularExp(ULong a, ULong b, ULong c){
+//	cout << "a: " << a << " b: " << b << " c: " << c << endl;
 	ULong result = 1;
 	ULong leadingbit = findHighestSetBit(b); // Heighest set bit
 	while(leadingbit > 0){ //while there are bits left
-		result = ((result*result)%c); //case 1: bit is a 0
+		result = ((result*result) % c); //case 1: bit is a 0
 		if((b & leadingbit) > 0){
-			result = ((result*a)%c); //case 2: if bit is a 1
+			result = ((result * a) % c); //case 2: if bit is a 1
 		}
-		leadingbit = leadingbit>>1;
+		leadingbit = leadingbit >> 1;
 	}
+//	cout << "result: " << result << endl;
+//	cout << "result: " << (int)result << endl;
+//	cout << "result: " << (unsigned int)result << endl;
 	return (unsigned int)result;
 }
 
@@ -162,8 +181,7 @@ ULong findHighestSetBit(ULong num){
 	return result;
 }
 
-byte* intToByteArray(int num){
-	char *result = new char[4];
+byte* intToByteArray(int num, byte *result){
 	for(int i = 0; i < 4; i++){
 		result[i] = (num & (0xFF << (8 *(3-i)))) >> (8 *(3-i));
 	}
